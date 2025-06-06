@@ -6,7 +6,7 @@ A multi-class skin disease classifier using CNN, DenseNet121, and MobileNetV1 on
 
 ## 📌 Project Overview
 
-This project applies deep learning to dermatology by classifying 9 common skin diseases using image data. It compares performance across a custom CNN, MobileNetV1, and DenseNet121 using TensorFlow and Keras.
+This project applies deep learning to dermatology by classifying 23 types of common skin diseases using image data. It compares performance across a custom CNN, MobileNetV1, and DenseNet121 using TensorFlow and Keras.
 
 ---
 
@@ -29,21 +29,6 @@ This project applies deep learning to dermatology by classifying 9 common skin d
 - 📐 **Image Size**: Resized to 240x240 pixels  
 - 📊 **Labels**: One-hot encoded  
 
----
-
-## 🏗️ Project Structure
-
-\`\`\`
-📁 skin-disease-detection
-├── README.md
-├── model_training.ipynb        # Jupyter Notebook with training & evaluation
-├── saved_models/
-│   └── skin_disease_model_ISIC_densenet.h5
-├── dataset/
-│   ├── train/
-│   └── val/
-├── requirements.txt
-\`\`\`
 
 ---
 
