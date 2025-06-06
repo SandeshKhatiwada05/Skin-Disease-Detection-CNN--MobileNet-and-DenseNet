@@ -1,4 +1,4 @@
-<h1>**🧠 AI for Skin Disease Detection**</h1>
+<h1>🧠 AI for Skin Disease Detection</h1>
 
 A multi-class skin disease classifier using CNN, DenseNet121, and MobileNetV1 on the DermNet dataset.
 
