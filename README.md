@@ -25,7 +25,7 @@ This project applies deep learning to dermatology by classifying 23 types of com
 ## 🗂️ Dataset
 
 - 📁 **Source**: https://www.kaggle.com/datasets/shubhamgoel27/dermnet  
-- 🖼️ **Classes**: 9 skin conditions (Melanoma, Benign Keratosis, Vascular Lesion, etc.)  
+- 🖼️ **Classes**: 23 skin conditions 
 - 📐 **Image Size**: Resized to 240x240 pixels  
 - 📊 **Labels**: One-hot encoded  
 
