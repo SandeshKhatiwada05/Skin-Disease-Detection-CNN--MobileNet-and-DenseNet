@@ -50,7 +50,7 @@ Each model is trained for 5 epochs and evaluated on a validation split. Confusio
 
 ## 🛠 Requirements
 
-\`\`\`
+```
 certifi==2021.10.8  
 click==8.0.3  
 Flask==1.1.2  
@@ -62,7 +62,7 @@ Werkzeug==2.0.2
 wincertstore==0.2  
 pillow==8.4.0  
 tensorflow==2.9.1  
-\`\`\`
+```
 
 Install with:
 
