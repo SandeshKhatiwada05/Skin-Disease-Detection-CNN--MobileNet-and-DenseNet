@@ -66,9 +66,9 @@ tensorflow==2.9.1
 
 Install with:
 
-\`\`\`bash
+```bash
 pip install -r requirements.txt
-\`\`\`
+```
 
 ---
 
@@ -83,12 +83,13 @@ pip install -r requirements.txt
 
 ## 📷 Sample Results
 
-> _Include accuracy/loss graphs and confusion matrix screenshots here_
+> _Screenshots will be uploaded here after project's completion_
 
 ---
 
 ## 🤝 Contributions
 
 This project was created for academic purposes. Contributions are welcome as this project grows into a web-based diagnostic tool.
+All the documentations and resources will be uploaded after after completion of the project.
 
 ---
