@@ -61,7 +61,7 @@ for directory in os.listdir(IMG_SAVE_PATH):
             print(f"Error processing {new_path}: {e}")
 
 data, labels = zip(*dataset)
-    temp = list(map(str_to_Int_mapper, labels))
+temp = list(map(str_to_Int_mapper, labels))
 
 import keras
 labels = keras.utils.to_categorical(temp)
@@ -420,8 +420,8 @@ testing_labels = to_categorical(testing_temp, num_classes=9)
 
 """## Prediction"""
 
-!pip install scipy==1.5.4
-!pip install scikit-plot
+# !pip install scipy==1.5.4
+# !pip install scikit-plot
 
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
