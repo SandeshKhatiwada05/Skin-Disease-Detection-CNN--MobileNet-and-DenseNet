@@ -26,12 +26,12 @@ def success():
     filepath = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(filepath)
 
-    # Dummy prediction data (replace with your model predictions if you want)
+    # Dummy prediction data for now
     predictions = {
-        'class1': 'Benign', 'prob1': 92,
-        'class2': 'Malignant', 'prob2': 5,
-        'class3': 'Uncertain', 'prob3': 2,
-        'class4': 'Other', 'prob4': 1,
+        'class1': 'Disease 1', 'prob1': 92,
+        'class2': 'Disease 2', 'prob2': 5,
+        'class3': 'Disease 3', 'prob3': 2,
+        'class4': 'Disease 4', 'prob4': 1,
     }
 
     return render_template('success.html', img=file.filename, predictions=predictions)
