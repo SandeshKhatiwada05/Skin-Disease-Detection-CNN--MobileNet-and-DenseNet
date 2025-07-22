@@ -167,8 +167,8 @@
       <h1 class="text-3xl font-bold mb-4">AI Skin Diagnosis</h1>
       <p class="mb-6 text-sm text-gray-600">Upload your image below</p>
 
-      <form action="/success" method="post" enctype="multipart/form-data" class="space-y-4">
-        <input type="file" name="file" required class="input-file"/>
+      <form action="{{ url_for('success') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+        <input type="file" name="file" required class="input-file" />
 
         <button type="submit" class="upload-button">
           Upload
