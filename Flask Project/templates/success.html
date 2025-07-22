@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Diagnosis Results | AI Skin Detection</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
@@ -47,10 +48,8 @@
       max-width: 300px;
       border-radius: 0.5rem;
       box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-      margin: 1rem 0;
+      margin: 1rem auto;
       display: block;
-      margin-left: auto;
-      margin-right: auto;
     }
 
     table {
@@ -117,8 +116,7 @@
 
 <body>
   <div class="header">
-    <!-- Only the title linking to home -->
-    <a href="{{ url_for('index') }}">Skin Disease Detection</a>
+    <a href="{{ url_for('home') }}">Skin Disease Detection</a>
   </div>
 
   <div class="card">
@@ -137,7 +135,7 @@
         <thead>
           <tr>
             <th>Class</th>
-            <th>Diseases</th>
+            <th>Disease</th>
             <th>Probability</th>
           </tr>
         </thead>
@@ -172,7 +170,7 @@
   </div>
 
   <!-- Modal for Pie Chart -->
-  <div id="pieModal" class="modal" style="display: flex;">
+  <div id="pieModal" class="modal">
     <div class="modal-content">
       <h2 class="text-lg font-bold mb-4">Prediction Probabilities</h2>
       <canvas id="pieChart"></canvas>
