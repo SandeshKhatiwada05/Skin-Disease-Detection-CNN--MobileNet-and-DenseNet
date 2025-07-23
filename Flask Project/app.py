@@ -8,22 +8,20 @@ from tensorflow.keras.utils import load_img, img_to_array
 
 # Initialize Flask app
 app = Flask(__name__)
-
-# Create upload folder path
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'images')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Load the trained DenseNet model (make sure SkinDisease.h5 is in your project folder)
-MODEL_PATH = os.path.join(app.root_path, 'SkinDisease.h5')
+# Load the trained DenseNet model
+MODEL_PATH = os.path.join(app.root_path, 'densenetv2.h5')
 model = load_model(MODEL_PATH)
 
-# Allowed file extensions
+# Define allowed file extensions
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'jfif'}
 
 def is_allowed(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Class names for prediction output
+# Class names matching the DenseNet output
 class_labels = [
     'Actinic keratosis',
     'Atopic Dermatitis',
@@ -36,13 +34,26 @@ class_labels = [
     'Vascular lesion'
 ]
 
+# Wikipedia or trusted links for each disease
+wiki_links = {
+    'Actinic keratosis': 'https://en.wikipedia.org/wiki/Actinic_keratosis',
+    'Atopic Dermatitis': 'https://en.wikipedia.org/wiki/Atopic_dermatitis',
+    'Benign keratosis': 'https://en.wikipedia.org/wiki/Seborrheic_keratosis',
+    'Dermatofibroma': 'https://en.wikipedia.org/wiki/Dermatofibroma',
+    'Melanocytic nevus': 'https://en.wikipedia.org/wiki/Melanocytic_nevus',
+    'Melanoma': 'https://en.wikipedia.org/wiki/Melanoma',
+    'Squamous cell carcinoma': 'https://en.wikipedia.org/wiki/Squamous_cell_carcinoma',
+    'Tinea Ringworm Candidiasis': 'https://en.wikipedia.org/wiki/Tinea',
+    'Vascular lesion': 'https://neurosurgerywiki.com/wiki/doku.php?id=vascular_lesion'
+}
+
 def get_prediction(image_path):
-    # Load and preprocess image for model input
+    # Resize to 240x240 as model expects
     img = load_img(image_path, target_size=(240, 240))
     img_arr = img_to_array(img)
     img_arr = img_arr.reshape(1, 240, 240, 3).astype('float32') / 255.0
 
-    predictions = model.predict(img_arr)[0]  # Get prediction probabilities
+    predictions = model.predict(img_arr)[0]
     pred_with_labels = list(zip(class_labels, predictions))
     pred_with_labels.sort(key=lambda x: x[1], reverse=True)
 
@@ -54,14 +65,14 @@ def get_prediction(image_path):
 
 @app.route('/')
 def home():
-    # Render main upload/paste URL page
     return render_template('index.html')
+
+# ... your existing code above unchanged ...
 
 @app.route('/success', methods=['POST'])
 def success():
     error_msg = ''
 
-    # Case 1: User provided image URL
     if request.form.get('link'):
         image_url = request.form.get('link')
         try:
@@ -74,18 +85,17 @@ def success():
             top_classes, top_probs = get_prediction(saved_path)
 
             results = {
-                'class1': top_classes[0], 'prob1': top_probs[0],
-                'class2': top_classes[1], 'prob2': top_probs[1],
-                'class3': top_classes[2], 'prob3': top_probs[2],
-                'class4': top_classes[3], 'prob4': top_probs[3],
+                'class1': top_classes[0], 'prob1': top_probs[0], 'url1': wiki_links.get(top_classes[0], '#'),
+                'class2': top_classes[1], 'prob2': top_probs[1], 'url2': wiki_links.get(top_classes[1], '#'),
+                'class3': top_classes[2], 'prob3': top_probs[2], 'url3': wiki_links.get(top_classes[2], '#'),
+                'class4': top_classes[3], 'prob4': top_probs[3], 'url4': wiki_links.get(top_classes[3], '#'),
             }
             return render_template('success.html', img=unique_name, predictions=results)
 
         except Exception as e:
-            print(f"Error fetching image URL: {e}")
+            print(str(e))
             error_msg = "Unable to fetch or process image from the provided URL."
 
-    # Case 2: User uploaded file
     elif 'file' in request.files:
         image_file = request.files['file']
 
@@ -97,17 +107,17 @@ def success():
             top_classes, top_probs = get_prediction(saved_path)
 
             results = {
-                'class1': top_classes[0], 'prob1': top_probs[0],
-                'class2': top_classes[1], 'prob2': top_probs[1],
-                'class3': top_classes[2], 'prob3': top_probs[2],
-                'class4': top_classes[3], 'prob4': top_probs[3],
+                'class1': top_classes[0], 'prob1': top_probs[0], 'url1': wiki_links.get(top_classes[0], '#'),
+                'class2': top_classes[1], 'prob2': top_probs[1], 'url2': wiki_links.get(top_classes[1], '#'),
+                'class3': top_classes[2], 'prob3': top_probs[2], 'url3': wiki_links.get(top_classes[2], '#'),
+                'class4': top_classes[3], 'prob4': top_probs[3], 'url4': wiki_links.get(top_classes[3], '#'),
             }
             return render_template('success.html', img=filename, predictions=results)
         else:
             error_msg = "Only jpg, jpeg, png, jfif formats are accepted."
 
-    # On error or no input, reload index with error message
     return render_template('index.html', error=error_msg)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=4000)
