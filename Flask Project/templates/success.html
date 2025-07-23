@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Diagnosis Results | AI Skin Detection</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
@@ -48,8 +47,10 @@
       max-width: 300px;
       border-radius: 0.5rem;
       box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-      margin: 1rem auto;
+      margin: 1rem 0;
       display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     table {
@@ -73,6 +74,19 @@
     td {
       font-size: 0.95rem;
       color: #4a5568;
+    }
+
+    /* Make disease links look nice */
+    .disease-link {
+      color: #4f46e5;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .disease-link:hover {
+      text-decoration: underline;
+      color: #4338ca;
     }
 
     .footer {
@@ -135,29 +149,45 @@
         <thead>
           <tr>
             <th>Class</th>
-            <th>Disease</th>
+            <th>Diseases</th>
             <th>Probability</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>1st</td>
-            <td>{{ predictions.class1 }}</td>
+            <td>
+              <a class="disease-link" href="{{ predictions.url1 }}" target="_blank" rel="noopener noreferrer">
+                {{ predictions.class1 }}
+              </a>
+            </td>
             <td>{{ predictions.prob1 }}%</td>
           </tr>
           <tr>
             <td>2nd</td>
-            <td>{{ predictions.class2 }}</td>
+            <td>
+              <a class="disease-link" href="{{ predictions.url2 }}" target="_blank" rel="noopener noreferrer">
+                {{ predictions.class2 }}
+              </a>
+            </td>
             <td>{{ predictions.prob2 }}%</td>
           </tr>
           <tr>
             <td>3rd</td>
-            <td>{{ predictions.class3 }}</td>
+            <td>
+              <a class="disease-link" href="{{ predictions.url3 }}" target="_blank" rel="noopener noreferrer">
+                {{ predictions.class3 }}
+              </a>
+            </td>
             <td>{{ predictions.prob3 }}%</td>
           </tr>
           <tr>
             <td>4th</td>
-            <td>{{ predictions.class4 }}</td>
+            <td>
+              <a class="disease-link" href="{{ predictions.url4 }}" target="_blank" rel="noopener noreferrer">
+                {{ predictions.class4 }}
+              </a>
+            </td>
             <td>{{ predictions.prob4 }}%</td>
           </tr>
         </tbody>
@@ -170,7 +200,7 @@
   </div>
 
   <!-- Modal for Pie Chart -->
-  <div id="pieModal" class="modal">
+  <div id="pieModal" class="modal" style="display: flex;">
     <div class="modal-content">
       <h2 class="text-lg font-bold mb-4">Prediction Probabilities</h2>
       <canvas id="pieChart"></canvas>
