@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Past Diagnosis Records</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f4f8;
+      color: #2d3748;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #4f46e5;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+    th {
+      background-color: #eef2ff;
+      color: #4338ca;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    img.thumbnail {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .btn-back {
+      margin: 1.5rem 0;
+      background-color: #4f46e5;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.3s;
+      display: inline-block;
+    }
+    .btn-back:hover {
+      background-color: #4338ca;
+    }
+    @media (max-width: 600px) {
+      table, th, td {
+        font-size: 0.85rem;
+      }
+      img.thumbnail {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Past Diagnosis Records</h1>
+
+  {% if records|length == 0 %}
+    <p>No past records found.</p>
+  {% else %}
+    <table aria-label="Past diagnosis records" style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #ddd;">
+          <th style="padding: 0.5rem;">Image</th>
+          <th style="padding: 0.5rem;">Predicted Disease</th>
+          <th style="padding: 0.5rem;">Date &amp; Time</th>
+          <th style="padding: 0.5rem;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in records %}
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 0.5rem;">
+            <img
+              src="{{ url_for('static', filename='images/' + rec.image_filename) }}"
+              alt="Uploaded image"
+              style="max-width: 80px; max-height: 80px; object-fit: contain;"
+              class="thumbnail"
+            />
+          </td>
+          <td style="padding: 0.5rem; vertical-align: middle;">{{ rec.prediction_text }}</td>
+          <td style="padding: 0.5rem; vertical-align: middle;">{{ rec.prediction_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td style="padding: 0.5rem; vertical-align: middle; position: relative;">
+            <!-- 3-dot button -->
+            <button onclick="toggleMenu('menu-{{ rec.id }}')" aria-label="Open menu"
+              style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&#x22EE;</button>
+
+            <!-- Dropdown menu -->
+            <div id="menu-{{ rec.id }}" class="dropdown-menu" style="display:none; position:absolute; right:0; background:white; border:1px solid #ddd; border-radius:0.25rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index:10;">
+              <button onclick="openDeleteModal({{ rec.id }})" 
+                      style="background:none; border:none; padding:0.5rem 1rem; width:100%; text-align:left; cursor:pointer; color:#ef4444;">
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <a href="{{ url_for('home') }}" class="btn-back" style="display:inline-block; margin-top: 1rem; color:#030217; font-weight:600; text-decoration:none;">← Back to Upload</a>
+
+  <!-- Delete confirmation modal -->
+  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
+      <p class="mb-6 text-gray-700">Are you sure you want to delete this record? This action cannot be undone.</p>
+      <div class="flex justify-end space-x-4">
+        <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+        <form id="deleteForm" method="POST" action="">
+          <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu(id) {
+      // Close any other open menus first
+      document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        if(menu.id !== id) menu.style.display = 'none';
+      });
+      // Toggle clicked menu
+      const menu = document.getElementById(id);
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Close menu on outside click
+    document.addEventListener('click', function(event) {
+      if (!event.target.closest('td')) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => menu.style.display = 'none');
+      }
+    });
+
+    function openDeleteModal(recordId) {
+      const modal = document.getElementById('deleteModal');
+      const form = document.getElementById('deleteForm');
+      form.action = `/delete_record/${recordId}`;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      const modal = document.getElementById('deleteModal');
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
