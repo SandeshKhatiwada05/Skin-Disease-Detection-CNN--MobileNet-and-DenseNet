@@ -2,180 +2,433 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Past Diagnosis Records</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <title>Project DermaScope — Past Diagnosis Records</title>
+
+  <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          },
+          boxShadow: {
+            'brand': '0 10px 35px rgba(99, 102, 241, 0.25)'
+          },
+          animation: {
+            'float-slow': 'float 8s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s ease-in-out infinite'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' }
+            }
+          }
+        }
+      }
+    };
+  </script>
+
   <style>
+    html, body { height: 100%; }
     body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f0f4f8;
-      color: #2d3748;
-      min-height: 100vh;
-      margin: 0;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
     }
-    h1 {
-      font-weight: 700;
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
-      color: #4f46e5;
-      text-align: center;
+    .bg-decor {
+      background:
+        radial-gradient(1000px 600px at -10% -10%, rgba(99,102,241,0.20), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(236,72,153,0.18), transparent 60%),
+        radial-gradient(800px 500px at 50% 120%, rgba(34,197,94,0.16), transparent 60%),
+        linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      position: relative;
+      min-height: 100%;
     }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      max-width: 900px;
-      background: white;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      overflow: hidden;
+    .noise-overlay:before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.35"/></svg>');
+      background-size: 300px 300px;
     }
-    th, td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #e2e8f0;
-      text-align: left;
+    .glass {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: saturate(1.4) blur(10px);
+      -webkit-backdrop-filter: saturate(1.4) blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
     }
-    th {
-      background-color: #eef2ff;
-      color: #4338ca;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    tbody tr:nth-child(even) {
-      background-color: #f9fafb;
-    }
-    img.thumbnail {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 0.5rem;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .btn-back {
-      margin: 1.5rem 0;
-      background-color: #4f46e5;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.375rem;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.3s;
-      display: inline-block;
-    }
-    .btn-back:hover {
-      background-color: #4338ca;
-    }
-    @media (max-width: 600px) {
-      table, th, td {
-        font-size: 0.85rem;
-      }
-      img.thumbnail {
-        width: 60px;
-        height: 60px;
-      }
-    }
+    .focus-ring { outline: 2px solid transparent; outline-offset: 2px; }
+    .focus-ring:focus-visible { box-shadow: 0 0 0 4px rgba(99,102,241,0.35); }
   </style>
 </head>
-<body>
-  <h1>Your Past Diagnosis Records</h1>
 
-  {% if records|length == 0 %}
-    <p>No past records found.</p>
-  {% else %}
-    <table aria-label="Past diagnosis records" style="width:100%; border-collapse: collapse;">
-      <thead>
-        <tr style="border-bottom: 2px solid #ddd;">
-          <th style="padding: 0.5rem;">Image</th>
-          <th style="padding: 0.5rem;">Predicted Disease</th>
-          <th style="padding: 0.5rem;">Date &amp; Time</th>
-          <th style="padding: 0.5rem;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for rec in records %}
-        <tr style="border-bottom: 1px solid #eee;">
-          <td style="padding: 0.5rem;">
-            <img
-              src="{{ url_for('static', filename='images/' + rec.image_filename) }}"
-              alt="Uploaded image"
-              style="max-width: 80px; max-height: 80px; object-fit: contain;"
-              class="thumbnail"
-            />
-          </td>
-          <td style="padding: 0.5rem; vertical-align: middle;">{{ rec.prediction_text }}</td>
-          <td style="padding: 0.5rem; vertical-align: middle;">{{ rec.prediction_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-          <td style="padding: 0.5rem; vertical-align: middle; position: relative;">
-            <!-- 3-dot button -->
-            <button onclick="toggleMenu('menu-{{ rec.id }}')" aria-label="Open menu"
-              style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&#x22EE;</button>
+<body class="bg-decor noise-overlay text-slate-800 antialiased">
+  <!-- Decorative orbs -->
+  <div aria-hidden="true" class="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full bg-brand-300 opacity-30 blur-3xl animate-float-slow"></div>
+  <div aria-hidden="true" class="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-pink-300 opacity-30 blur-3xl animate-float-slow" style="animation-delay: 1s;"></div>
 
-            <!-- Dropdown menu -->
-            <div id="menu-{{ rec.id }}" class="dropdown-menu" style="display:none; position:absolute; right:0; background:white; border:1px solid #ddd; border-radius:0.25rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index:10;">
-              <button onclick="openDeleteModal({{ rec.id }})" 
-                      style="background:none; border:none; padding:0.5rem 1rem; width:100%; text-align:left; cursor:pointer; color:#ef4444;">
-                Delete
-              </button>
+  <!-- Header -->
+  <header class="relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex items-center justify-between">
+        <a href="{{ url_for('home') }}" class="group inline-flex items-center gap-2 select-none">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2a8 8 0 0 0-8 8v3.586l-1.707 1.707A1 1 0 0 0 3 17h4a1 1 0 0 0 1-1v-2a4 4 0 1 1 8 0v2a1 1 0 0 0 1 1h4a1 1 0 0 0 .707-1.707L20 13.586V10a8 8 0 0 0-8-8Z"/>
+              <path d="M8 19a4 4 0 0 0 8 0h-2a2 2 0 1 1-4 0H8Z"/>
+            </svg>
+          </span>
+          <div>
+            <div class="text-xs uppercase tracking-widest text-slate-500">Project DermaScope</div>
+            <div class="text-lg font-extrabold tracking-tight text-slate-900">Past diagnosis records</div>
+          </div>
+        </a>
+
+        <nav class="flex items-center gap-2">
+          <a href="{{ url_for('home') }}"
+             class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-brand hover:bg-brand-700 transition focus-ring">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12a1 1 0 0 1 1-1h6V5a1 1 0 1 1 2 0v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H4a1 1 0 0 1-1-1Z"/>
+            </svg>
+            Upload
+          </a>
+          <button type="button"
+                  onclick="openLogoutModal()"
+                  class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm hover:shadow-md hover:bg-red-700 transition focus-ring">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 3a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V3ZM6.343 6.343a1 1 0 0 0-1.414 1.414l3.536 3.536a1 1 0 0 0 1.414-1.414L6.343 6.343ZM3 13a1 1 0 1 0 0-2h5a1 1 0 1 0 0 2H3Zm4.929 4.707a1 1 0 0 0 1.414-1.414L6.343 12.757a1 1 0 0 0-1.414 1.414l3.536 3.536ZM11 16a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0v-5Z"/>
+              <path d="M14 7h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4v-2h4a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-4V7Z"/>
+            </svg>
+            Logout
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <!-- Controls -->
+      <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div class="glass rounded-xl p-2 pr-3 ring-1 ring-slate-200 flex items-center w-full sm:max-w-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-2 text-slate-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 2a8 8 0 1 1-5.292 13.708l-2.5 2.5 1.414 1.414 2.5-2.5A8 8 0 0 1 10 2Zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 10 4Z"/>
+          </svg>
+          <input id="filterInput" type="text" placeholder="Filter by disease or date..."
+                 class="w-full bg-transparent outline-none text-sm placeholder:text-slate-400" />
+        </div>
+      </div>
+
+      <!-- Table Card -->
+      <section class="glass rounded-2xl shadow-xl ring-1 ring-slate-200 overflow-hidden">
+        {% if records|length == 0 %}
+          <div class="p-10 text-center">
+            <div class="mx-auto h-14 w-14 rounded-2xl bg-brand-100 text-brand-700 flex items-center justify-center shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3a9 9 0 1 0 9 9A9.01 9.01 0 0 0 12 3Zm0 4a3 3 0 1 1-3 3 3 3 0 0 1 3-3Zm0 12a7.963 7.963 0 0 1-4.9-1.7 4.978 4.978 0 0 1 9.8 0A7.963 7.963 0 0 1 12 19Z"/>
+              </svg>
             </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
+            <h2 class="mt-4 text-lg font-bold text-slate-900">No past records yet</h2>
+            <p class="mt-1 text-sm text-slate-600">Upload a skin image to see your diagnosis history here.</p>
+            <a href="{{ url_for('home') }}"
+               class="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-brand hover:bg-brand-700 transition focus-ring">
+              Upload now
+            </a>
+          </div>
+        {% else %}
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-brand-50/80">
+                <tr class="text-brand-900">
+                  <th class="px-4 py-3 text-left font-semibold">Image</th>
+                  <th class="px-4 py-3 text-left font-semibold">Predicted Disease</th>
+                  <th class="px-4 py-3 text-left font-semibold">Date &amp; Time</th>
+                  <th class="px-4 py-3 text-right font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody" class="divide-y divide-slate-100">
+                {% for rec in records %}
+                <tr class="hover:bg-slate-50/60 transition">
+                  <td class="px-4 py-3">
+                    <a href="{{ url_for('static', filename='images/' + rec.image_filename) }}" target="_blank" rel="noopener noreferrer" class="inline-block">
+                      <img
+                        src="{{ url_for('static', filename='images/' + rec.image_filename) }}"
+                        alt="Uploaded image"
+                        class="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-lg ring-1 ring-slate-200 shadow-sm"
+                      />
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 align-middle">
+                    <a
+                      class="text-brand-700 hover:text-brand-800 underline underline-offset-4 decoration-brand-300 font-medium"
+                      href="#"
+                      data-external="disease"
+                      data-disease="{{ rec.prediction_text }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ rec.prediction_text }}
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 align-middle text-slate-700">
+                    {{ rec.prediction_date.strftime('%Y-%m-%d %H:%M:%S') }}
+                  </td>
+                  <td class="px-4 py-3 align-middle text-right relative">
+                    <button
+                      type="button"
+                      class="inline-flex items-center rounded-md px-2 py-1.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition focus-ring"
+                      aria-haspopup="menu"
+                      aria-expanded="false"
+                      aria-controls="menu-{{ rec.id }}"
+                      data-menu-trigger="menu-{{ rec.id }}"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 7a2 2 0 1 0-2-2 2 2 0 0 0 2 2Zm0 2a2 2 0 1 0 2 2 2 2 0 0 0-2-2Zm0 6a2 2 0 1 0 2 2 2 2 0 0 0-2-2Z"/>
+                      </svg>
+                    </button>
 
-  <a href="{{ url_for('home') }}" class="btn-back" style="display:inline-block; margin-top: 1rem; color:#030217; font-weight:600; text-decoration:none;">← Back to Upload</a>
+                    <div
+                      id="menu-{{ rec.id }}"
+                      role="menu"
+                      class="hidden absolute right-0 mt-2 w-40 origin-top-right rounded-lg bg-white ring-1 ring-slate-200 shadow-lg z-20"
+                    >
+                      <a
+                        href="{{ url_for('static', filename='images/' + rec.image_filename) }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="block px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                        role="menuitem"
+                      >
+                        Open image
+                      </a>
+                      <button
+                        type="button"
+                        onclick="openDeleteModal({{ rec.id }})"
+                        class="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                        role="menuitem"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
 
-  <!-- Delete confirmation modal -->
-  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-      <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
-      <p class="mb-6 text-gray-700">Are you sure you want to delete this record? This action cannot be undone.</p>
-      <div class="flex justify-end space-x-4">
-        <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-        <form id="deleteForm" method="POST" action="">
-          <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+      <!-- Footer -->
+      <footer class="mt-12 text-center text-sm text-slate-500">
+        <p>&copy; <span id="year"></span> Project DermaScope. All rights reserved.</p>
+      </footer>
+    </div>
+  </main>
+
+  <!-- Logout confirmation modal -->
+  <div
+    id="logoutModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="logoutTitle"
+  >
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeLogoutModal()"></div>
+
+    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+      <div class="flex items-start gap-3">
+        <div class="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 id="logoutTitle" class="text-lg font-bold text-slate-900">Confirm logout</h2>
+          <p class="mt-1 text-sm text-slate-600">Are you sure you want to logout?</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onclick="closeLogoutModal()"
+          class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:shadow-sm hover:border-slate-400 transition focus-ring"
+        >
+          Cancel
+        </button>
+        <form id="logoutForm" method="GET" action="{{ url_for('logout') }}">
+          <button
+            type="submit"
+            class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 hover:shadow-md transition focus-ring"
+          >
+            Logout
+          </button>
         </form>
       </div>
     </div>
   </div>
 
-  <script>
-    function toggleMenu(id) {
-      // Close any other open menus first
-      document.querySelectorAll('.dropdown-menu').forEach(menu => {
-        if(menu.id !== id) menu.style.display = 'none';
-      });
-      // Toggle clicked menu
-      const menu = document.getElementById(id);
-      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    }
+  <!-- Delete confirmation modal -->
+  <div
+    id="deleteModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="deleteTitle"
+  >
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
 
-    // Close menu on outside click
-    document.addEventListener('click', function(event) {
-      if (!event.target.closest('td')) {
-        document.querySelectorAll('.dropdown-menu').forEach(menu => menu.style.display = 'none');
+    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+      <div class="flex items-start gap-3">
+        <div class="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm-1 5h2v8h-2Zm0 10h2v2h-2Z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 id="deleteTitle" class="text-lg font-bold text-slate-900">Delete this record?</h2>
+          <p class="mt-1 text-sm text-slate-600">This action cannot be undone.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onclick="closeDeleteModal()"
+          class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:shadow-sm hover:border-slate-400 transition focus-ring"
+        >
+          Cancel
+        </button>
+        <form id="deleteForm" method="POST" action="">
+          <button
+            type="submit"
+            class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 hover:shadow-md transition focus-ring"
+          >
+            Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Footer year
+    document.getElementById('year') && (document.getElementById('year').textContent = new Date().getFullYear());
+
+    // Menu handling
+    function closeAllMenus() {
+      document.querySelectorAll('[role="menu"]').forEach(m => m.classList.add('hidden'));
+    }
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('[data-menu-trigger]');
+      if (trigger) {
+        const id = trigger.getAttribute('data-menu-trigger');
+        const menu = document.getElementById(id);
+        const isHidden = menu.classList.contains('hidden');
+        closeAllMenus();
+        if (isHidden) menu.classList.remove('hidden');
+      } else if (!e.target.closest('[role="menu"]')) {
+        closeAllMenus();
       }
     });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllMenus();
+    });
 
+    // Delete modal
     function openDeleteModal(recordId) {
       const modal = document.getElementById('deleteModal');
       const form = document.getElementById('deleteForm');
       form.action = `/delete_record/${recordId}`;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      closeAllMenus();
     }
-
     function closeDeleteModal() {
       const modal = document.getElementById('deleteModal');
       modal.classList.remove('flex');
       modal.classList.add('hidden');
     }
+    window.openDeleteModal = openDeleteModal;
+    window.closeDeleteModal = closeDeleteModal;
+
+    // Logout modal
+    function openLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+    window.openLogoutModal = openLogoutModal;
+    window.closeLogoutModal = closeLogoutModal;
+
+    // Filter table
+    const filterInput = document.getElementById('filterInput');
+    const tbody = document.getElementById('recordsBody');
+    if (filterInput && tbody) {
+      filterInput.addEventListener('input', () => {
+        const q = filterInput.value.trim().toLowerCase();
+        tbody.querySelectorAll('tr').forEach(tr => {
+          const cellsText = tr.textContent.toLowerCase();
+          tr.style.display = cellsText.includes(q) ? '' : 'none';
+        });
+      });
+    }
+
+    // Build authoritative disease links (DermNet)
+    function officialInfoUrl(name) {
+      const key = (name || '').trim().toLowerCase();
+      const map = {
+        'actinic keratosis': 'https://dermnetnz.org/topics/actinic-keratosis',
+        'atopic dermatitis': 'https://dermnetnz.org/topics/atopic-dermatitis',
+        'benign keratosis': 'https://dermnetnz.org/topics/seborrhoeic-keratoses',
+        'dermatofibroma': 'https://dermnetnz.org/topics/dermatofibroma',
+        'melanocytic nevus': 'https://dermnetnz.org/topics/melanocytic-naevi-of-the-skin',
+        'melanoma': 'https://dermnetnz.org/topics/melanoma',
+        'squamous cell carcinoma': 'https://dermnetnz.org/topics/cutaneous-squamous-cell-carcinoma',
+        'tinea ringworm candidiasis': 'https://dermnetnz.org/topics/tinea-corporis',
+        'vascular lesion': 'https://dermnetnz.org/search?query=vascular%20lesion'
+      };
+      if (map[key]) return map[key];
+      return `https://www.google.com/search?q=${encodeURIComponent('site:dermnetnz.org ' + name)}`;
+    }
+    document.querySelectorAll('a[data-external="disease"]').forEach(a => {
+      const disease = a.dataset.disease || a.textContent;
+      const url = officialInfoUrl(disease);
+      a.setAttribute('href', url);
+    });
   </script>
 </body>
 </html>
