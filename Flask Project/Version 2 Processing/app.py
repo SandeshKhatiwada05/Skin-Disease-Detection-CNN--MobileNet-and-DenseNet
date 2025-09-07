@@ -17,22 +17,13 @@ from tensorflow.keras.applications.densenet import preprocess_input
 # CONFIGURATION
 # ============================================================
 
-# Base directory of this app.py file
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Path to your already–trained model (.h5) you mentioned
-# (kept relative so you can move the project without editing code)
-MODEL_FILE = os.path.join(
-    BASE_DIR,
-    "DenseNet_81PercentageAccuracy.h5"
-)
+MODEL_FILE = os.path.join(BASE_DIR, "DenseNet_81PercentageAccuracy.h5")
 
-# Directory to store uploaded images
 STATIC_IMAGES_DIR = os.path.join(BASE_DIR, "static", "images")
 os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
 
-# Classes (must match the order model was trained on!)
-# If order is different in your training script, adjust this list accordingly.
 CLASS_NAMES = [
     'Actinic keratosis',
     'Atopic Dermatitis',
@@ -45,19 +36,11 @@ CLASS_NAMES = [
     'Vascular lesion'
 ]
 
-# Open‑set (Unknown) handling:
-# Since you no longer use the new threshold config file, define a fixed threshold.
-# Adjust this number after observing predictions:
-#   If too many images become "Unknown" -> LOWER it (e.g. 0.50 -> 0.45)
-#   If too few become "Unknown"         -> RAISE it (e.g. 0.50 -> 0.55)
 DEFAULT_OPEN_SET_THRESHOLD = 0.50
-OPEN_SET_THRESHOLD = float(
-    os.environ.get("OPEN_SET_THRESHOLD", DEFAULT_OPEN_SET_THRESHOLD)
-)
+OPEN_SET_THRESHOLD = float(os.environ.get("OPEN_SET_THRESHOLD", DEFAULT_OPEN_SET_THRESHOLD))
 
-UNKNOWN_LABEL = "Unknown / Outside Supported Classes"
+UNKNOWN_LABEL = "Undetectable / Outside Supported Classes"
 
-# External information mapping (optional)
 EXTERNAL_INFO = {
     'actinic keratosis': 'https://dermnetnz.org/topics/actinic-keratosis',
     'atopic dermatitis': 'https://dermnetnz.org/topics/atopic-dermatitis',
@@ -80,14 +63,9 @@ app = Flask(__name__)
 app.secret_key = "protect_sessions_and_cookies123"
 
 # ============================================================
-# DATABASE (Adjust credentials if necessary)
+# DATABASE
 # ============================================================
 
-# Make sure your MySQL server is running and the database / tables exist.
-# Example expected tables:
-#   users(id INT PK AI, username VARCHAR UNIQUE, password_hash TEXT)
-#   predictions(id INT PK AI, user_id INT FK, image_filename TEXT,
-#               prediction_text TEXT, prediction_date DATETIME)
 db = pymysql.connect(
     host="localhost",
     user="root",
@@ -98,7 +76,7 @@ db = pymysql.connect(
 cursor = db.cursor()
 
 # ============================================================
-# STARTUP: LOAD MODEL
+# STARTUP
 # ============================================================
 
 if not os.path.isfile(MODEL_FILE):
@@ -109,7 +87,7 @@ model = load_model(MODEL_FILE)
 print(f"[INFO] Model loaded. Open-set threshold = {OPEN_SET_THRESHOLD:.3f}")
 
 # ============================================================
-# HELPER FUNCTIONS
+# HELPERS
 # ============================================================
 
 def is_allowed(filename: str) -> bool:
@@ -123,38 +101,26 @@ def external_url_for(name: str) -> str:
     )
 
 def predict_image(image_path: str, top_k: int = 4):
-    """
-    Run inference on an image and apply open-set logic.
-    """
     img = load_img(image_path, target_size=(224, 224))
     arr = img_to_array(img)
     arr = arr.reshape(1, 224, 224, 3)
-    arr = preprocess_input(arr)  # MUST match training preprocessing
+    arr = preprocess_input(arr)
 
-    # Predict
-    preds = model.predict(arr, verbose=0)[0]  # softmax probs
-    # Determine max class
-    max_prob = float(preds.max())
-    max_idx = int(preds.argmax())
-
+    probs = model.predict(arr, verbose=0)[0]  # softmax
+    max_prob = float(probs.max())
+    max_idx = int(probs.argmax())
     is_unknown = max_prob < OPEN_SET_THRESHOLD
 
-    # Sort indices descending by probability
-    sorted_indices = preds.argsort()[::-1]
-    top_pairs = []
-    for idx in sorted_indices[:top_k]:
-        label = CLASS_NAMES[idx]
-        prob_pct = float(preds[idx]) * 100.0
-        top_pairs.append((label, prob_pct))
+    sorted_idx = probs.argsort()[::-1]
+    top_pairs = [(CLASS_NAMES[i], float(probs[i]) * 100.0) for i in sorted_idx[:top_k]]
 
-    result = {
+    return {
         "unknown": is_unknown,
         "primary_label": UNKNOWN_LABEL if is_unknown else CLASS_NAMES[max_idx],
         "max_prob": max_prob * 100.0,
         "threshold": OPEN_SET_THRESHOLD * 100.0,
         "top": top_pairs
     }
-    return result
 
 # ============================================================
 # ROUTES
@@ -171,7 +137,6 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-
         cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
         user = cursor.fetchone()
         if user and check_password_hash(user['password_hash'], password):
@@ -192,7 +157,6 @@ def register():
         if not username or not pw or not cpw:
             flash("All fields required.")
             return render_template("register.html")
-
         if pw != cpw:
             flash("Passwords do not match.")
             return render_template("register.html")
@@ -204,7 +168,7 @@ def register():
 
         password_hash = generate_password_hash(pw)
         cursor.execute(
-            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+            "INSERT INTO users (username, password_hash) VALUES (%s,%s)",
             (username, password_hash)
         )
         db.commit()
@@ -226,11 +190,9 @@ def success():
 
     if 'file' not in request.files:
         return render_template("index.html", error="No file part.")
-
     file = request.files['file']
     if not file.filename:
         return render_template("index.html", error="No file selected.")
-
     if not is_allowed(file.filename):
         return render_template("index.html", error="Only jpg, jpeg, png, jfif allowed.")
 
@@ -241,28 +203,39 @@ def success():
 
     pred = predict_image(save_path, top_k=4)
 
-    # Store main prediction in DB
+    # Store main (could be Undetectable)
     cursor.execute(
-        "INSERT INTO predictions (user_id, image_filename, prediction_text, prediction_date) "
-        "VALUES (%s, %s, %s, %s)",
+        "INSERT INTO predictions (user_id, image_filename, prediction_text, prediction_date) VALUES (%s,%s,%s,%s)",
         (session['user_id'], unique_name, pred['primary_label'], datetime.now())
     )
     db.commit()
 
-    top_entries = pred['top']
-    while len(top_entries) < 4:  # pad for safety
-        top_entries.append(('', 0.0))
+    # Build template dictionary
+    if pred['unknown']:
+        # Show only an Undetectable row. No disease probabilities.
+        predictions = {
+            'is_unknown': True,
+            'undetectable_label': "Undetectable (Outside Trained Scope)",
+            'undetectable_prob': round(pred['max_prob'], 2),  # confidence of best (still low)
+            'threshold': round(pred['threshold'], 2),
+            'max_prob': round(pred['max_prob'], 2),
+            'primary': pred['primary_label']
+        }
+    else:
+        top_entries = pred['top']
+        while len(top_entries) < 4:
+            top_entries.append(('', 0.0))
 
-    predictions = {
-        'class1': top_entries[0][0], 'prob1': round(top_entries[0][1], 2), 'url1': external_url_for(top_entries[0][0]) if top_entries[0][0] else '',
-        'class2': top_entries[1][0], 'prob2': round(top_entries[1][1], 2), 'url2': external_url_for(top_entries[1][0]) if top_entries[1][0] else '',
-        'class3': top_entries[2][0], 'prob3': round(top_entries[2][1], 2), 'url3': external_url_for(top_entries[2][0]) if top_entries[2][0] else '',
-        'class4': top_entries[3][0], 'prob4': round(top_entries[3][1], 2), 'url4': external_url_for(top_entries[3][0]) if top_entries[3][0] else '',
-        'primary': pred['primary_label'],
-        'is_unknown': pred['unknown'],
-        'max_prob': round(pred['max_prob'], 2),
-        'threshold': round(pred['threshold'], 2)
-    }
+        predictions = {
+            'is_unknown': False,
+            'class1': top_entries[0][0], 'prob1': round(top_entries[0][1], 2), 'url1': external_url_for(top_entries[0][0]) if top_entries[0][0] else '',
+            'class2': top_entries[1][0], 'prob2': round(top_entries[1][1], 2), 'url2': external_url_for(top_entries[1][0]) if top_entries[1][0] else '',
+            'class3': top_entries[2][0], 'prob3': round(top_entries[2][1], 2), 'url3': external_url_for(top_entries[2][0]) if top_entries[2][0] else '',
+            'class4': top_entries[3][0], 'prob4': round(top_entries[3][1], 2), 'url4': external_url_for(top_entries[3][0]) if top_entries[3][0] else '',
+            'primary': pred['primary_label'],
+            'max_prob': round(pred['max_prob'], 2),
+            'threshold': round(pred['threshold'], 2)
+        }
 
     return render_template("success.html", img=unique_name, predictions=predictions)
 
@@ -271,11 +244,7 @@ def pastrecords():
     if 'user_id' not in session:
         flash("Please login.")
         return redirect(url_for("login"))
-
-    cursor.execute(
-        "SELECT * FROM predictions WHERE user_id=%s ORDER BY prediction_date DESC",
-        (session['user_id'],)
-    )
+    cursor.execute("SELECT * FROM predictions WHERE user_id=%s ORDER BY prediction_date DESC", (session['user_id'],))
     rows = cursor.fetchall()
     return render_template("pastrecords.html", records=rows)
 
@@ -284,21 +253,15 @@ def delete_record(record_id):
     if 'user_id' not in session:
         flash("Please login.")
         return redirect(url_for("login"))
-
     cursor.execute("SELECT * FROM predictions WHERE id=%s", (record_id,))
     rec = cursor.fetchone()
     if not rec or rec['user_id'] != session['user_id']:
         abort(403)
-
     cursor.execute("DELETE FROM predictions WHERE id=%s", (record_id,))
     db.commit()
     flash("Record deleted.")
     return redirect(url_for("pastrecords"))
 
-# ============================================================
-# ENTRY POINT
-# ============================================================
 if __name__ == "__main__":
-    # For local development; change host='0.0.0.0' to access over LAN if needed.
     print(f"[INFO] Starting app with model: {MODEL_FILE}")
     app.run(debug=True, port=4000)
