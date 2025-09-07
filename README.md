@@ -1,10 +1,10 @@
-<h1>🧠 AI for Skin Disease Detection</h1>
+<h1>AI for Skin Disease Detection</h1>
 
 A multi-class skin disease classifier using CNN, DenseNet121, and MobileNetV1 on the DermNet dataset.
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 This project applies deep learning to dermatology by classifying 23 types of common skin diseases using image data. It compares performance across a custom CNN, MobileNetV1, and DenseNet121 using TensorFlow and Keras.
 
@@ -22,12 +22,12 @@ This project applies deep learning to dermatology by classifying 23 types of com
 
 ---
 
-## 🗂️ Dataset
+## Dataset
 
-- 📁 **Source**: https://www.kaggle.com/datasets/shubhamgoel27/dermnet  
-- 🖼️ **Classes**: 23 skin conditions 
-- 📐 **Image Size**: Resized to 240x240 pixels  
-- 📊 **Labels**: One-hot encoded  
+- **Source**: https://www.kaggle.com/datasets/riyaelizashaju/skin-disease-classification-image-dataset  
+- **Classes**: 9 skin conditions 
+- **Image Size**: Resized to 240x240 pixels  
+- **Labels**: One-hot encoded  
 
 
 ---
@@ -51,43 +51,18 @@ Each model is trained for 5 epochs and evaluated on a validation split. Confusio
 ## 🛠 Requirements
 
 ```
-certifi==2021.10.8  
-click==8.0.3  
-Flask==1.1.2  
-gunicorn==20.1.0  
-itsdangerous==2.0.1  
-Jinja2==2.11.3  
-MarkupSafe==1.1.1  
-Werkzeug==2.0.2  
-wincertstore==0.2  
-pillow==8.4.0  
-tensorflow==2.9.1  
-```
-
-Install with:
-
-```bash
-pip install -r requirements.txt
+use conda to install the environment_full.yml
 ```
 
 ---
 
-## 🚧 In Progress
-
-- [ ] Add a simple Flask web app for real-time predictions  
-- [ ] Improve CNN accuracy with data augmentation  
-- [ ] Experiment with MobileNetV2 and EfficientNet  
-- [ ] Add Grad-CAM for model explainability  
-
----
-
-## 📷 Sample Results
+## Sample Results
 
 > _Screenshots will be uploaded here after project's completion_
 
 ---
 
-## 🤝 Contributions
+## Contributions
 
 This project was created for academic purposes. Contributions are welcome as this project grows into a web-based diagnostic tool.
 All the documentations and resources will be uploaded after after completion of the project.
