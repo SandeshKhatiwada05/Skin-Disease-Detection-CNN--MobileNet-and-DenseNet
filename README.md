@@ -42,13 +42,13 @@ This project applies deep learning to dermatology by classifying 23 types of com
 
 ---
 
-## 📈 Evaluation
+## Evaluation
 
 Each model is trained for 5 epochs and evaluated on a validation split. Confusion matrices and accuracy/loss plots are generated.
 
 ---
 
-## 🛠 Requirements
+## Requirements
 
 ```
 use conda to install the environment_full.yml
