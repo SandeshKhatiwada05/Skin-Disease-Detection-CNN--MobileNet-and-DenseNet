@@ -10,15 +10,15 @@ This project applies deep learning to dermatology by classifying 23 types of com
 
 ---
 
-## ✅ Current Features
+## Current Features
 
-- ✅ Data preprocessing from the DermNet dataset  
-- ✅ Custom CNN model implemented from scratch  
-- ✅ Transfer learning with MobileNetV1  
-- ✅ Transfer learning with DenseNet121  
-- ✅ Training, validation, and testing splits  
-- ✅ Accuracy & loss visualization using Seaborn  
-- ✅ Confusion matrix evaluation using Scikit-plot  
+- Data preprocessing from the DermNet dataset  
+- Custom CNN model implemented from scratch  
+- Transfer learning with MobileNetV1  
+- Transfer learning with DenseNet121  
+- Training, validation, and testing splits  
+- Accuracy & loss visualization using Seaborn  
+- Confusion matrix evaluation using Scikit-plot  
 
 ---
 
