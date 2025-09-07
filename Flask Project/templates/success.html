@@ -2,116 +2,520 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Diagnosis Results | AI Skin Detection</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <title>Project DermaScope — Diagnosis Results</title>
+
+  <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Space+Grotesk&display=swap" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          },
+          boxShadow: {
+            'brand': '0 10px 35px rgba(99, 102, 241, 0.25)'
+          },
+          animation: {
+            'float-slow': 'float 8s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s ease-in-out infinite'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' }
+            }
+          }
+        }
+      }
+    };
+  </script>
 
   <style>
+    html, body { height: 100%; }
     body {
-      font-family: 'Space Grotesk', sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #000000 100%);
-      color: #cdd6f4;
-      padding: 2rem;
-      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
     }
-
+    /* Background with soft gradients + subtle noise */
+    .bg-decor {
+      background:
+        radial-gradient(1000px 600px at -10% -10%, rgba(99,102,241,0.20), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(236,72,153,0.18), transparent 60%),
+        radial-gradient(800px 500px at 50% 120%, rgba(34,197,94,0.16), transparent 60%),
+        linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      position: relative;
+      min-height: 100%;
+    }
+    .noise-overlay:before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.35"/></svg>');
+      background-size: 300px 300px;
+    }
+    /* Glass cards */
     .glass {
-      backdrop-filter: blur(14px);
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 1rem;
-      box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);
-      padding: 2rem;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: saturate(1.4) blur(10px);
+      -webkit-backdrop-filter: saturate(1.4) blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
     }
-
-    .neon {
-      text-shadow: 0 0 12px #00e5ff;
-      color: #00e5ff;
-      font-family: 'Orbitron', sans-serif;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    th, td {
-      padding: 0.75rem 1rem;
-      border: 1px solid #00e5ff55;
-      text-align: center;
-    }
-
-    th {
-      background-color: rgba(0, 229, 255, 0.1);
-      font-size: 1rem;
-    }
-
-    td {
-      font-size: 0.95rem;
-    }
-
-    .result-img {
-      max-width: 300px;
-      border-radius: 1rem;
-      box-shadow: 0 0 12px #00e5ff77;
-    }
-
-    .back-link:hover {
-      text-decoration: underline;
-    }
+    /* Focus ring */
+    .focus-ring { outline: 2px solid transparent; outline-offset: 2px; }
+    .focus-ring:focus-visible { box-shadow: 0 0 0 4px rgba(99,102,241,0.35); }
   </style>
 </head>
 
-<body class="flex flex-col items-center justify-center">
-  <div class="w-full max-w-3xl glass">
+<body class="bg-decor noise-overlay text-slate-800 antialiased">
+  <!-- Decorative orbs -->
+  <div aria-hidden="true" class="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full bg-brand-300 opacity-30 blur-3xl animate-float-slow"></div>
+  <div aria-hidden="true" class="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-pink-300 opacity-30 blur-3xl animate-float-slow" style="animation-delay: 1s;"></div>
 
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-xl neon">AI Skin Disease Diagnosis</h1>
-      <a href="/" class="text-cyan-300 back-link hover:text-cyan-100 transition">← Back to Home</a>
+  <!-- Header -->
+  <header class="relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex items-center justify-between">
+        <a href="{{ url_for('home') }}" class="group inline-flex items-center gap-2 select-none">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2a8 8 0 0 0-8 8v3.586l-1.707 1.707A1 1 0 0 0 3 17h4a1 1 0 0 0 1-1v-2a4 4 0 1 1 8 0v2a1 1 0 0 0 1 1h4a1 1 0 0 0 .707-1.707L20 13.586V10a8 8 0 0 0-8-8Z"/>
+              <path d="M8 19a4 4 0 0 0 8 0h-2a2 2 0 1 1-4 0H8Z"/>
+            </svg>
+          </span>
+          <div>
+            <div class="text-xs uppercase tracking-widest text-slate-500">Project DermaScope</div>
+            <div class="text-lg font-extrabold tracking-tight text-slate-900">Diagnosis Results</div>
+          </div>
+        </a>
+
+        <nav class="flex items-center gap-2">
+          <a href="{{ url_for('pastrecords') }}"
+             class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:shadow-md hover:border-slate-400 transition focus-ring">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 4a2 2 0 0 0-2 2v1h18V6a2 2 0 0 0-2-2H5Z"/>
+              <path d="M21 9H3v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9ZM8 12h8v2H8v-2Z"/>
+            </svg>
+            Past Records
+          </a>
+          <a href="{{ url_for('home') }}"
+             class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-brand hover:bg-brand-700 transition focus-ring">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12a1 1 0 0 1 1-1h6V5a1 1 0 1 1 2 0v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H4a1 1 0 0 1-1-1Z"/>
+            </svg>
+            Upload Another
+          </a>
+          <button type="button"
+                  onclick="openLogoutModal()"
+                  class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm hover:shadow-md hover:bg-red-700 transition focus-ring">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 3a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0V3ZM6.343 6.343a1 1 0 0 0-1.414 1.414l3.536 3.536a1 1 0 0 0 1.414-1.414L6.343 6.343ZM3 13a1 1 0 1 0 0-2h5a1 1 0 1 0 0 2H3Zm4.929 4.707a1 1 0 0 0 1.414-1.414L6.343 12.757a1 1 0 0 0-1.414 1.414l3.536 3.536ZM11 16a1 1 0 1 0-2 0v5a1 1 0 1 0 2 0v-5Z"/>
+              <path d="M14 7h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4v-2h4a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-4V7Z"/>
+            </svg>
+            Logout
+          </button>
+        </nav>
+      </div>
     </div>
+  </header>
 
-    <div class="text-center my-6">
-      <h2 class="text-lg neon mb-4">Uploaded Image</h2>
-      <img class="result-img mx-auto" src="{{ url_for('static', filename='images/' + img) }}" alt="Uploaded image" />
+  <!-- Main -->
+  <main class="relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+        <!-- Uploaded Image Card -->
+        <section class="glass rounded-2xl shadow-xl p-6 sm:p-8">
+          <div class="mb-6">
+            <div class="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
+              <span class="inline-block h-2 w-2 rounded-full bg-brand-500 animate-pulse-slow"></span>
+              Input Image
+            </div>
+            <h1 class="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">Uploaded image</h1>
+            <p class="mt-2 text-slate-600">Ensure images are clear, well-lit, and focused for best results.</p>
+          </div>
+
+          <div class="relative rounded-xl overflow-hidden ring-1 ring-slate-200 bg-white/70">
+            <img
+              class="block w-full h-auto object-contain"
+              src="{{ url_for('static', filename='images/' + img) }}"
+              alt="Uploaded image preview"
+            />
+          </div>
+
+          <p class="mt-4 text-xs text-slate-500">
+            Note: Project DermaScope provides AI-assisted preliminary classifications, made for CSIT Project and is not a medical diagnosis.
+          </p>
+        </section>
+
+        <!-- Predictions + Chart -->
+        <section class="glass rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col">
+          <div class="mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
+              Model predictions
+            </h2>
+            <p class="mt-2 text-slate-600">
+              Top four predicted conditions with their probabilities.
+            </p>
+          </div>
+
+          <div class="relative overflow-hidden rounded-xl ring-1 ring-slate-200 bg-white/70">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-brand-50/80 sticky top-0">
+                <tr class="text-brand-800">
+                  <th class="px-4 py-3 font-semibold">Rank</th>
+                  <th class="px-4 py-3 font-semibold">Disease</th>
+                  <th class="px-4 py-3 font-semibold text-right">Probability</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="bg-green-50/50">
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-xs font-semibold">1st</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a
+                      class="text-brand-700 hover:text-brand-800 underline underline-offset-4 decoration-brand-300 font-medium"
+                      href="{{ predictions.url1 }}"
+                      data-external="disease"
+                      data-disease="{{ predictions.class1 }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ predictions.class1 }}
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ predictions.prob1 }}%</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-xs font-semibold">2nd</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a
+                      class="text-brand-700 hover:text-brand-800 underline underline-offset-4 decoration-brand-300 font-medium"
+                      href="{{ predictions.url2 }}"
+                      data-external="disease"
+                      data-disease="{{ predictions.class2 }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ predictions.class2 }}
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ predictions.prob2 }}%</td>
+                </tr>
+                <tr class="bg-slate-50/40">
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-xs font-semibold">3rd</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a
+                      class="text-brand-700 hover:text-brand-800 underline underline-offset-4 decoration-brand-300 font-medium"
+                      href="{{ predictions.url3 }}"
+                      data-external="disease"
+                      data-disease="{{ predictions.class3 }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ predictions.class3 }}
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ predictions.prob3 }}%</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-xs font-semibold">4th</span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <a
+                      class="text-brand-700 hover:text-brand-800 underline underline-offset-4 decoration-brand-300 font-medium"
+                      href="{{ predictions.url4 }}"
+                      data-external="disease"
+                      data-disease="{{ predictions.class4 }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ predictions.class4 }}
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 text-right font-semibold text-slate-800">{{ predictions.prob4 }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Inline chart -->
+          <div class="mt-6 glass rounded-xl p-4 ring-1 ring-slate-200">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-sm font-semibold text-slate-800">Confidence breakdown</h3>
+              <button
+                type="button"
+                onclick="openPieModal()"
+                class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-brand hover:bg-brand-700 transition focus-ring"
+                title="View large chart"
+              >
+                View Chart
+              </button>
+            </div>
+            <div class="relative">
+              <canvas id="inlineChart" height="170"></canvas>
+            </div>
+          </div>
+
+          <div class="mt-6 text-xs text-slate-500">
+            Always consult a qualified dermatologist for diagnosis and treatment.
+          </div>
+        </section>
+      </div>
+
+      <!-- Footer -->
+      <footer class="mt-12 text-center text-sm text-slate-500">
+        <p>&copy; <span id="year"></span> Project DermaScope. All rights reserved.</p>
+      </footer>
     </div>
+  </main>
 
-    <div class="mt-10">
-      <h2 class="text-lg neon mb-4 text-center">Model Predictions</h2>
-      <table class="text-cyan-100">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Class</th>
-            <th>Probability</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1st</td>
-            <td>{{ predictions.class1 }}</td>
-            <td>{{ predictions.prob1 }}%</td>
-          </tr>
-          <tr>
-            <td>2nd</td>
-            <td>{{ predictions.class2 }}</td>
-            <td>{{ predictions.prob2 }}%</td>
-          </tr>
-          <tr>
-            <td>3rd</td>
-            <td>{{ predictions.class3 }}</td>
-            <td>{{ predictions.prob3 }}%</td>
-          </tr>
-          <tr>
-            <td>4th</td>
-            <td>{{ predictions.class4 }}</td>
-            <td>{{ predictions.prob4 }}%</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Logout confirmation modal -->
+  <div
+    id="logoutModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="logoutTitle"
+  >
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeLogoutModal()"></div>
+
+    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+      <div class="flex items-start gap-3">
+        <div class="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 id="logoutTitle" class="text-lg font-bold text-slate-900">Confirm logout</h2>
+          <p class="mt-1 text-sm text-slate-600">Are you sure you want to logout?</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onclick="closeLogoutModal()"
+          class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:shadow-sm hover:border-slate-400 transition focus-ring"
+        >
+          Cancel
+        </button>
+        <form id="logoutForm" method="GET" action="{{ url_for('logout') }}">
+          <button
+            type="submit"
+            class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 hover:shadow-md transition focus-ring"
+          >
+            Logout
+          </button>
+        </form>
+      </div>
     </div>
-
   </div>
+
+  <!-- Pie Chart Modal -->
+  <div
+    id="pieModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pieTitle"
+  >
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closePieModal()"></div>
+
+    <div class="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11 2a1 1 0 0 1 1 1v9h9a1 1 0 1 1 0 2H12v9a1 1 0 1 1-2 0v-9H1a1 1 0 1 1 0-2h9V3a1 1 0 0 1 1-1Z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="pieTitle" class="text-lg font-bold text-slate-900">Prediction probabilities</h2>
+            <p class="text-xs text-slate-500">Top four classes by confidence</p>
+          </div>
+        </div>
+        <button onclick="closePieModal()" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-ring" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6.225 4.811 4.811 6.225 10.586 12l-5.775 5.775 1.414 1.414L12 13.414l5.775 5.775 1.414-1.414L13.414 12l5.775-5.775-1.414-1.414L12 10.586 6.225 4.811Z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="mt-4">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Data from server
+    const probabilities = [
+      {{ predictions.prob1 }},
+      {{ predictions.prob2 }},
+      {{ predictions.prob3 }},
+      {{ predictions.prob4 }}
+    ];
+    const labels = [
+      '{{ predictions.class1 }}',
+      '{{ predictions.class2 }}',
+      '{{ predictions.class3 }}',
+      '{{ predictions.class4 }}'
+    ];
+
+    const colors = ['#4f46e5', '#3b82f6', '#60a5fa', '#93c5fd'];
+    const hoverColors = ['#4338ca', '#2563eb', '#3b82f6', '#60a5fa'];
+
+    function createDoughnut(ctx) {
+      return new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: probabilities,
+            backgroundColor: colors,
+            hoverBackgroundColor: hoverColors,
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '60%',
+          plugins: {
+            legend: { position: 'bottom', labels: { usePointStyle: true } },
+            tooltip: {
+              callbacks: {
+                label: (item) => {
+                  const val = item.raw ?? 0;
+                  return `${item.label}: ${val}%`;
+                }
+              }
+            }
+          },
+          animation: {
+            animateScale: true,
+            animateRotate: true
+          }
+        }
+      });
+    }
+
+    // Inline chart
+    let inlineChartInstance = null;
+    const inlineEl = document.getElementById('inlineChart');
+    if (inlineEl) {
+      inlineChartInstance = createDoughnut(inlineEl.getContext('2d'));
+    }
+
+    // Modal controls
+    function openPieModal() {
+      const modal = document.getElementById('pieModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Build chart when opening (or rebuild)
+      const canvas = document.getElementById('pieChart');
+      if (canvas._chartInstance) {
+        canvas._chartInstance.destroy();
+      }
+      canvas._chartInstance = createDoughnut(canvas.getContext('2d'));
+    }
+
+    function closePieModal() {
+      const modal = document.getElementById('pieModal');
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+
+    // Auto-show modal on load then hide after 4s
+    window.addEventListener('load', () => {
+      openPieModal();
+      setTimeout(closePieModal, 4000);
+    });
+
+    // Logout modal controls
+    function openLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+    window.openLogoutModal = openLogoutModal;
+    window.closeLogoutModal = closeLogoutModal;
+
+    // Ensure disease links always open an official info page
+    function officialInfoUrl(name) {
+      const key = (name || '').trim().toLowerCase();
+      const map = {
+        'actinic keratosis': 'https://dermnetnz.org/topics/actinic-keratosis',
+        'atopic dermatitis': 'https://dermnetnz.org/topics/atopic-dermatitis',
+        // "Benign keratosis" in HAM10000 corresponds to SK/LPLK; link to SK overview:
+        'benign keratosis': 'https://dermnetnz.org/topics/seborrhoeic-keratoses',
+        'dermatofibroma': 'https://dermnetnz.org/topics/dermatofibroma',
+        'melanocytic nevus': 'https://dermnetnz.org/topics/melanocytic-naevi-of-the-skin',
+        'melanoma': 'https://dermnetnz.org/topics/melanoma',
+        'squamous cell carcinoma': 'https://dermnetnz.org/topics/cutaneous-squamous-cell-carcinoma',
+        // This class groups tinea/ringworm; point to tinea corporis page:
+        'tinea ringworm candidiasis': 'https://dermnetnz.org/topics/tinea-corporis',
+        // General catch-all for vascular lesions: use DermNet search
+        'vascular lesion': 'https://dermnetnz.org/search?query=vascular%20lesion'
+      };
+      if (map[key]) return map[key];
+      // Fallback: DermNet site search via Google
+      return `https://www.google.com/search?q=${encodeURIComponent('site:dermnetnz.org ' + name)}`;
+    }
+
+    // Patch anchors if urls are empty or relative
+    document.querySelectorAll('a[data-external="disease"]').forEach(a => {
+      const raw = (a.getAttribute('href') || '').trim();
+      const isAbsolute = /^https?:\/\//i.test(raw);
+      if (!raw || !isAbsolute) {
+        const disease = a.dataset.disease || a.textContent;
+        const url = officialInfoUrl(disease);
+        a.setAttribute('href', url);
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+  </script>
 </body>
 </html>
