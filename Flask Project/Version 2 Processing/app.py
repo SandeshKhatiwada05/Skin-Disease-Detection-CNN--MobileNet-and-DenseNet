@@ -19,7 +19,7 @@ from tensorflow.keras.applications.densenet import preprocess_input
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-MODEL_FILE = os.path.join(BASE_DIR, "DenseNet_81PercentageAccuracy.h5")
+MODEL_FILE = os.path.join(BASE_DIR, "DenseNetMadeInkaggle.h5")
 
 STATIC_IMAGES_DIR = os.path.join(BASE_DIR, "static", "images")
 os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
