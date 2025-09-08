@@ -13,14 +13,8 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import load_img, img_to_array
 from tensorflow.keras.applications.densenet import preprocess_input
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-
 MODEL_FILE = os.path.join(BASE_DIR, "DenseNetMadeInkaggle.h5")
-
 STATIC_IMAGES_DIR = os.path.join(BASE_DIR, "static", "images")
 os.makedirs(STATIC_IMAGES_DIR, exist_ok=True)
 
@@ -38,7 +32,6 @@ CLASS_NAMES = [
 
 DEFAULT_OPEN_SET_THRESHOLD = 0.50
 OPEN_SET_THRESHOLD = float(os.environ.get("OPEN_SET_THRESHOLD", DEFAULT_OPEN_SET_THRESHOLD))
-
 UNKNOWN_LABEL = "Undetectable / Outside Supported Classes"
 
 EXTERNAL_INFO = {
@@ -55,16 +48,8 @@ EXTERNAL_INFO = {
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'jfif'}
 
-# ============================================================
-# FLASK APP
-# ============================================================
-
 app = Flask(__name__)
 app.secret_key = "protect_sessions_and_cookies123"
-
-# ============================================================
-# DATABASE
-# ============================================================
 
 db = pymysql.connect(
     host="localhost",
@@ -75,10 +60,6 @@ db = pymysql.connect(
 )
 cursor = db.cursor()
 
-# ============================================================
-# STARTUP
-# ============================================================
-
 if not os.path.isfile(MODEL_FILE):
     raise FileNotFoundError(f"Model file not found: {MODEL_FILE}")
 
@@ -86,10 +67,13 @@ print(f"[INFO] Loading model from: {MODEL_FILE}")
 model = load_model(MODEL_FILE)
 print(f"[INFO] Model loaded. Open-set threshold = {OPEN_SET_THRESHOLD:.3f}")
 
-# ============================================================
-# HELPERS
-# ============================================================
+# -------- Context Processor --------
+@app.context_processor
+def inject_user():
+    # Makes current_username available in every template
+    return {'current_username': session.get('username')}
 
+# -------- Helpers --------
 def is_allowed(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -105,15 +89,12 @@ def predict_image(image_path: str, top_k: int = 4):
     arr = img_to_array(img)
     arr = arr.reshape(1, 224, 224, 3)
     arr = preprocess_input(arr)
-
-    probs = model.predict(arr, verbose=0)[0]  # softmax
+    probs = model.predict(arr, verbose=0)[0]
     max_prob = float(probs.max())
     max_idx = int(probs.argmax())
     is_unknown = max_prob < OPEN_SET_THRESHOLD
-
     sorted_idx = probs.argsort()[::-1]
     top_pairs = [(CLASS_NAMES[i], float(probs[i]) * 100.0) for i in sorted_idx[:top_k]]
-
     return {
         "unknown": is_unknown,
         "primary_label": UNKNOWN_LABEL if is_unknown else CLASS_NAMES[max_idx],
@@ -122,10 +103,7 @@ def predict_image(image_path: str, top_k: int = 4):
         "top": top_pairs
     }
 
-# ============================================================
-# ROUTES
-# ============================================================
-
+# -------- Routes --------
 @app.route("/")
 def home():
     if 'user_id' not in session:
@@ -153,19 +131,16 @@ def register():
         username = request.form.get("username", "").strip()
         pw = request.form.get("password", "")
         cpw = request.form.get("confirm_password", "")
-
         if not username or not pw or not cpw:
             flash("All fields required.")
             return render_template("register.html")
         if pw != cpw:
             flash("Passwords do not match.")
             return render_template("register.html")
-
         cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
         if cursor.fetchone():
             flash("Username already taken.")
             return render_template("register.html")
-
         password_hash = generate_password_hash(pw)
         cursor.execute(
             "INSERT INTO users (username, password_hash) VALUES (%s,%s)",
@@ -176,8 +151,9 @@ def register():
         return redirect(url_for("login"))
     return render_template("register.html")
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST", "GET"])
 def logout():
+    # Allow both for safety; prefer POST from the modal.
     session.clear()
     flash("Logged out.")
     return redirect(url_for("login"))
@@ -203,20 +179,17 @@ def success():
 
     pred = predict_image(save_path, top_k=4)
 
-    # Store main (could be Undetectable)
     cursor.execute(
         "INSERT INTO predictions (user_id, image_filename, prediction_text, prediction_date) VALUES (%s,%s,%s,%s)",
         (session['user_id'], unique_name, pred['primary_label'], datetime.now())
     )
     db.commit()
 
-    # Build template dictionary
     if pred['unknown']:
-        # Show only an Undetectable row. No disease probabilities.
         predictions = {
             'is_unknown': True,
             'undetectable_label': "Undetectable (Outside Trained Scope)",
-            'undetectable_prob': round(pred['max_prob'], 2),  # confidence of best (still low)
+            'undetectable_prob': round(pred['max_prob'], 2),
             'threshold': round(pred['threshold'], 2),
             'max_prob': round(pred['max_prob'], 2),
             'primary': pred['primary_label']
@@ -225,7 +198,6 @@ def success():
         top_entries = pred['top']
         while len(top_entries) < 4:
             top_entries.append(('', 0.0))
-
         predictions = {
             'is_unknown': False,
             'class1': top_entries[0][0], 'prob1': round(top_entries[0][1], 2), 'url1': external_url_for(top_entries[0][0]) if top_entries[0][0] else '',
