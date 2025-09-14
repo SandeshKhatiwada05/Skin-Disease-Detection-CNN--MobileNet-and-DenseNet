@@ -1,4 +1,0 @@
-name: your_env_name
-channels:
-  - defaults
-prefix: D:\Installations\Miniconda\envs\your_env_name
