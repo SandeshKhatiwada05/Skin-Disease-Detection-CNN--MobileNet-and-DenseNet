@@ -57,8 +57,11 @@ use conda to install the environment_full.yml
 ---
 
 ## Sample Results
+<img width="613" height="488" alt="image" src="https://github.com/user-attachments/assets/08da86c6-68b3-42d8-b144-0e11882814b2" />
+<img width="575" height="647" alt="image" src="https://github.com/user-attachments/assets/4454d1c0-0bef-40eb-94cf-86d5f596bfc0" />
+<img width="865" height="637" alt="image" src="https://github.com/user-attachments/assets/899e176d-009e-4083-bf29-a3ea547e15d1" />
+<img width="865" height="744" alt="image" src="https://github.com/user-attachments/assets/95b3f2e3-cfc6-4075-944a-82b14d56ffba" />
 
-> _Screenshots will be uploaded here after project's completion_
 
 ---
 
